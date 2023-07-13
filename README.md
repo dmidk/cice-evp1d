@@ -18,7 +18,7 @@ It requires input files in order to run this code. Please consult DMI in case yo
 
 # Testing for correctness
 
-We expect binary identical results as long as we confine ourselves not to use SIMD operations. The baseline version (v0) does not support SIMD instructions and we cannot expect binary identical results once we start using SIMD instructions. This is also reflected in the md5sums for f2 below whereas f0 (serial) and f1 (multicore but no SIMD) retain binary identical results:
+A necessary condition for obtaining binary identical results it to avoid SIMD operations as the baseline version (v0) does not support SIMD instructions. This is also reflected in the md5sums for f2 below whereas f0 (serial) and f1 (multicore but no SIMD) retain binary identical results:
 
 ```
 for f in f0 f1 f2
