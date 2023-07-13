@@ -11,14 +11,16 @@ CC=icc
 FCFLAG=-cpp -module
 CFLAGS=-diag-disable=10441
 LDFLAGS=""
+
 # CPU flags
 # f0 (serial) and f1 (multicore but NO SIMD) are used to prove binary identical results across all variants and upstream runs, f2 focus on performance
 FCf0:=-g -O0 -traceback -fp-model precise -fpe0 -FR -CB -warn all
 FCf1:=-g -O1 -qopenmp -traceback -fp-model precise -fpe0 -FR -CB -no-vec -no-fma -warn all
 FCf2:=-qopenmp -O3 -xCORE-AVX512 -qopt-zmm-usage=high -ipo -finline-functions -finline -parallel
-# GPU flags
+
+# GPU flags (requires COMPILER=ifx, CC=icx)
 FCg1:=-D_OPENMP_TARGET -fiopenmp -O2 -fopenmp-targets=spir64="-mllvm -vpo-paropt-enable-64bit-opencl-atomics=true"
 FCg1f2018:=-D_OPENMP_TARGET -fiopenmp -O2 -fopenmp-targets=spir64="-mllvm -vpo-paropt-enable-64bit-opencl-atomics=true" -fopenmp-target-do-concurrent
-# common
-checkflags = f0 f1
-flags = ${checkflags} f2
+
+# Common
+flags = ${checkflags} f2 # g1 g1f2018
