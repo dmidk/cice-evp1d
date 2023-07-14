@@ -5,6 +5,16 @@ The cice-kernel project host files that have been used during the EVP refactoriz
 All input data required for running these benchmarks have been generated and provided by DMI in 2022. The input data is based both on the current operational setup at DMI and a setup based on the Regional Arctic Model system (RASM). The variations of the EVP kernel implementations are all based on the upstream CICE implementation which is extracted in the file (src/bench\_v0.F90).
 This repository contains the files needed for standalone tests of the 1d evp solver implemented in CICE.
 
+# Source code
+
+The source files are split into three groups:
+
+- *wrapper files* that ensure declaration of arrays, initialization, IO handling, timers, OpenMP init etc. This is write-once code solely useful for supporting current driver files with sufficient infrastructure.
+
+- *driver files* that are used to run the EVP benchmarks, i.e. they call code that will ensure proper runtime initialization based on the namelist settings and they have timers around the benchmark and exposes how EVP is supposed to be called. There is one driver file per EVP implementation and some driver files include both a CPU and a GPU version. The driver files all have the prefix bench in their filename.
+
+- *evp files* these are the files that contain the EVP code. They are all based on the upstream version found in bench-v0.F90. There is one file for each EVP implementation and some of the files contain both a CPU and a GPU version. The name of these files matches the name of the driver files.
+
 # Building
 
 ```
@@ -15,10 +25,21 @@ ls bin/ifort/v*/*/evp_v?? # will list all the binaries that have been generated.
 # Running
 
 It requires input files in order to run this code. Please consult DMI in case you are interested in running the kernel.
+As for the namelist parameters there are a couple of them that are tied to the testcase at hand, namely:
+
+```
+&kernel_nml
+ ndte      = 1000           ! number of outer convergence iterations (typical value is 1000)
+ testscale = 1              ! allowing one to weak-scale the given testcase, v0 is 4x increase for each +1 in testscale, v1-v2 is 2x increase for each +1 in testscale.
+ binoutput = .true.         ! whether or not one wishes to dump results emerging from stress and stepu, respectively
+ lindividual = .true.       ! whether or not one wishes to run both stress and stepu alone (i.e. withour barriers between) on top of running EVP to get individual measurements of the two stages too.
+/
+
+```
 
 # Testing for correctness
 
-A necessary condition for obtaining binary identical results it to avoid SIMD operations as the baseline version (v0) does not support SIMD instructions. This is also reflected in the md5sums for f2 below whereas f0 (serial) and f1 (multicore but no SIMD) retain binary identical results:
+The baseline version (v0) does not support SIMD instructions and we cannot expect binary identical results once we start using these. Thus, a necessary condition for retaining binary identical results is not to use SIMD instructions. This is also reflected in the md5sums for f2 below whereas f0 (serial) and f1 (multicore but no SIMD) retain binary identical results:
 
 ```
 for f in f0 f1 f2
