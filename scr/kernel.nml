@@ -1,0 +1,11 @@
+&kernel_nml
+ ndte      = 5  
+ testscale = 1      
+ binoutput = .true.  
+ lindividual = .true. 
+ nx_block = 1117
+ ny_block = 1493
+ na = 631387
+ nb = 608124
+ navel = 660613
+/

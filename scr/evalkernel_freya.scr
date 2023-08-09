@@ -1,0 +1,22 @@
+#!/bin/bash 
+
+# Script to run test
+# set compiler (for now ifort or ftn)
+# set Path is set to current path (shown)
+basicdir=$pwd
+COMPILER='ftn'
+basicdir=$(pwd)
+echo "$basicdir"
+echo $COMPILER
+for f in f0 f1 f2
+do
+  for vv in 0 1 2a 2b 2c 2d #2e
+  do
+    expdir=$basicdir/run/${COMPILER}/v${vv}/${f}/
+    for file in ${expdir}/output*1d.bin; do
+       echo 
+       md5sum $file
+    done
+
+  done
+done
