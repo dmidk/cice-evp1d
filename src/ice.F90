@@ -17,10 +17,9 @@ module ice_constants
   implicit none
   save
   private
-  integer (4), public :: ndte
 #ifdef _OPENMP_TARGET
   !$omp declare target(c0, c1, p027, p055, p111, p166, c1p5, p2, p222, p25,    &
-  !$omp                p333, p5, puny, ecci, arlx1i, denom1, Ktens, revp,      &
+  !$omp                p333, p5, puny, arlx1i, denom1, Ktens, revp,      &
   !$omp                capping, deltaminEVP, e_factor, epp2i, brlx)
 #endif
   real (kind=dbl_kind), parameter, public ::                                   &
@@ -66,23 +65,67 @@ module ice_constants
     p111 = c1/c9, &
     p055 = p111*p5, &
     p027 = p055*p5, &
-    p222 = c2/c9, &
-    puny   = 1.0e-11_dbl_kind
+    p222 = c2/c9
+!    puny   = 1.0e-11_dbl_kind
   real (kind=dbl_kind), parameter, public :: &
-    rhow   = 1026.0_dbl_kind,        & ! density of seawater (kg/m^3)
-    eyc = 0.36_dbl_kind,             &
-    revp = c0,                       &
-    ecci = p25,                      &
-    Ktens = c0                      
-  real (kind=dbl_kind), public :: brlx, arlx1i, denom1, capping, e_factor, epp2i, deltaminEVP
-  real (kind=dbl_kind) :: arlx
-  public :: calc_const
-contains
-subroutine calc_const()
-  implicit none
-  arlx   = c2*eyc*real(ndte,kind=dbl_kind)
-  arlx1i=c1/arlx
-  brlx = real(ndte,kind=dbl_kind)
-  denom1=c1/(c1+arlx1i)
-end subroutine calc_const
+    rhow   = 1026.0_dbl_kind         ! density of seawater (kg/m^3)
 end module ice_constants
+  module ice_dyn_shared
+   use ice_kinds_mod
+   use ice_constants
+  implicit none
+  public set_evp_parameters
+  save
+! Hardcoded from except for u0, cosw and sinw
+  real(kind=dbl_kind), parameter, public            :: &
+      u0           = 5e-5_dbl_kind           , & ! hardcoded as in ice_dyn_shared
+      cosw         = c1                      , & ! hardcoded as in ice_dyn_shared
+      sinw         = c0                      , & ! hardcoded as in ice_dyn_shared
+! Default variables from namelist
+      elasticDamp  = 0.36_dbl_kind           , &
+! variables from namelist
+      Ktens        = c0                      , & ! assumes Ktens 0
+      revp         = c0                      , & ! assumes revised_evp false
+      e_plasticpot = c2                      , &
+      e_yieldcurve = c2
+
+! from namelist 
+      logical (kind=log_kind), parameter, public :: &
+         revised_evp = .false.   ! if true, use revised evp procedure
+
+      integer (kind=int_kind), public        :: &
+         ndte
+!  Calculated here 
+      real(kind=dbl_kind), public            :: &
+         e_factor, &       ! assume e_yieldcurve=2 and e_plastpot = 2
+         capping,  &
+         epp2i    , &
+         brlx    , &
+         arlx    , &
+         arlx1i  , &
+         deltaminEVP, & !Read in. Normally set to 10^-9
+         denom1
+contains
+      subroutine set_evp_parameters (dt)
+! reduced version. Only contain needed parameters
+      real (kind=dbl_kind), intent(in) :: &
+         dt      ! time step
+
+      ! local variables
+
+!      character(len=*), parameter :: subname = '(set_evp_parameters)'
+
+      ! elastic time step
+!      dtei = real(ndte,kind=dbl_kind)/dt
+
+      ! variables for elliptical yield curve and plastic potential
+      epp2i = c1/e_plasticpot**2
+      capping = c1  ! This is the default value
+      e_factor = e_yieldcurve**2 / e_plasticpot**4
+      arlx   = c2 * elasticDamp * real(ndte,kind=dbl_kind)
+      arlx1i   = c1/arlx
+      brlx   = real(ndte,kind=dbl_kind)
+      denom1 = c1/(c1+arlx1i)
+      deltaminEVP  = 10e-9_dbl_kind          ! default from namelist
+      end subroutine set_evp_parameters
+  end module ice_dyn_shared

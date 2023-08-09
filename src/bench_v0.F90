@@ -62,7 +62,9 @@ subroutine stress (nx_block,   ny_block,   &
 
   use ice_kinds_mod
   use ice_constants, only: c0, c1, p027, p055, p111, p166, & 
-      p2, p222, p25, p333, p5, puny, ecci, arlx1i, denom1, Ktens, revp, capping
+      p2, p222, p25, p333, p5 
+!puny is not used unless eliminate underflow is used (search Elimiate underflow in this function)
+  use ice_dyn_shared, only: arlx1i, denom1, Ktens, revp, capping
   implicit none
   integer (kind=int_kind), intent(in) :: & 
      nx_block, ny_block, & ! block dimensions
@@ -348,7 +350,7 @@ subroutine strain_rates (      nx_block,   ny_block,   &
                                Deltase,    Deltasw     )
 
   use ice_kinds_mod
-  use ice_constants, only: e_factor
+  use ice_dyn_shared, only: e_factor
 
       integer (kind=int_kind), intent(in) :: &
          nx_block, ny_block    ! block dimensions
@@ -432,9 +434,9 @@ subroutine strain_rates (      nx_block,   ny_block,   &
 
       subroutine visc_replpress(strength, DminArea, Delta, &
                                 zetax2, etax2, rep_prs, capping)
-      use ice_constants, only: epp2i
       use ice_kinds_mod
-      use ice_constants, only: c1, Ktens
+      use ice_constants, only: c1
+      use ice_dyn_shared, only: epp2i, Ktens
 
       real (kind=dbl_kind), intent(in)::  &
          strength, & !
@@ -487,7 +489,8 @@ subroutine strain_rates (      nx_block,   ny_block,   &
                         Tbu)
   use ice_kinds_mod
 
-  use ice_constants, only: c0, c1, rhow, brlx, revp
+  use ice_constants, only: c0, c1
+  use ice_dyn_shared, only:  rhow, brlx, revp
 
   implicit none
      integer (kind=int_kind), intent(in) :: &

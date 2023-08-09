@@ -11,15 +11,15 @@ program ciceevp
 #ifdef itt
   use ittnotify
 #endif
-  use ice_kinds_mod, only : int_kind
-  use ice_constants, only : ndte, calc_const
-  use create_nml,    only : nx_block, ny_block, inpfname, read_nml,            &
+  use ice_kinds_mod, only : int_kind, dbl_kind
+  use ice_dyn_shared, only : ndte, set_evp_parameters
+  use create_nml,     only : nx_block, ny_block, inpfname, read_nml,            &
                             testscale, na, navel, lindividual, binoutput
-  use my_timer,      only : timer, timer_init, timer_print
-  use myomp,         only : domp_init
-  use numa,          only : numainit_all
-  use bench,         only : stress, stepu
-  use vars,          only : read_nml, alloc_1d_v1, stat_1d, readin_1d,         &
+  use my_timer,       only : timer, timer_init, timer_print
+  use myomp,          only : domp_init
+  use numa,           only : numainit_all
+  use bench,          only : stress, stepu
+  use vars,           only : read_nml, alloc_1d_v1, stat_1d, readin_1d,         &
                             resize_1d, stat_out_1d, writeout_1d,               &
                             uvel, vvel, dxT, dyT, dxhy, dyhx, cxp, cyp, cxm,   &
                             cym, DminTarea, strength, stressp_1, stressp_2,    &
@@ -33,6 +33,7 @@ program ciceevp
                             str1, str2, str3, str4, str5, str6, str7, str8
   implicit none
   integer (kind=int_kind) :: i, nthreads, myscale
+    real(kind=dbl_kind), parameter :: dt =300._dbl_kind !!!! ADDED TAR MAY NEED TO DO SOMETHING WITH IT!!!!
 
 #ifdef itt
   call itt_pause()
@@ -44,12 +45,13 @@ program ciceevp
   call timer(1,'benchp')
   !--- allocate and fill content into arrays -----------------------------------
   call read_nml()
-  call calc_const()
+  call set_evp_parameters(dt)
   call alloc_1d_v1()
 !$OMP PARALLEL DEFAULT(shared)
   call numainit_all(1,na,navel) ! numainit_all is for default testscale=1
 !$OMP END PARALLEL
   call readin_1d()
+
   !--- allow simple scaling of the testcase: 2xtestscale -----------------------
   myscale = testscale
   do

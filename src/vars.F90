@@ -17,7 +17,7 @@ module create_nml
   public :: read_nml
 contains
   subroutine read_nml
-  use ice_constants, only: ndte
+  use ice_dyn_shared, only: ndte
   implicit none
   integer (4) :: nml_err
   integer (4), parameter :: funi=503
@@ -69,7 +69,7 @@ contains
   end subroutine read_nml
 end module create_nml
 !===============================================================================
-module ice_dyn_shared
+module ice_boundary
   ! hardcoded hack to allow running with multiple block and OpenMP
   implicit none
   public
@@ -141,11 +141,11 @@ module ice_dyn_shared
       endif
     enddo
   end subroutine ice_HaloUpdate 
-end module ice_dyn_shared
+end module ice_boundary
 !===============================================================================
 module vars
   use ice_kinds_mod
-  use ice_constants, only: ndte,  brlx, arlx1i, denom1, capping, e_factor, epp2i, deltaminEVP
+  use ice_dyn_shared, only: ndte,  brlx, arlx1i, denom1, capping, e_factor, epp2i, deltaminEVP
   use create_nml, only : nx_block, ny_block, inpfname, read_nml, max_blocks, na, navel, testscale
   implicit none
   public
@@ -1312,18 +1312,18 @@ module vars
     write (*,*) '-----------------------------------------------'
     write(*,'(a11,3f25.8)') ' uvel_init:',minval( uvel_init(:)),maxval( uvel_init(:)) ,sum(uvel_init(:))
     write(*,'(a11,3f25.8)') ' vvel_init:',minval( vvel_init(:)),maxval( vvel_init(:)) ,sum(vvel_init(:))
-    write(*,'(a11,3f25.8)') '   strintxU:',   minval(strintx(:)), maxval(strintx(:)),sum(strintx(:))
-    write(*,'(a11,3f25.8)') '   strintyU:',   minval(strinty(:)), maxval(strinty(:)),sum(strinty(:))
+    write(*,'(a11,3f25.8)') '  strintxU:',   minval(strintx(:)), maxval(strintx(:)),sum(strintx(:))
+    write(*,'(a11,3f25.8)') '  strintyU:',   minval(strinty(:)), maxval(strinty(:)),sum(strinty(:))
     write(*,'(a11,3f25.8)') '   cdn_ocn:',   minval( cdn_ocn(:)),maxval( cdn_ocn(:)),sum( cdn_ocn(:))  
     write(*,'(a11,3f25.8)') '       aiu:',      minval( aiX(:)),      maxval( aiX(:)),sum( aiX(:))
     write(*,'(a11,3f25.8)') '      uocn:',     minval( uocn(:)),     maxval( uocn(:)),sum( uocn(:))
     write(*,'(a11,3f25.8)') '      vocn:',     minval( vocn(:)),     maxval( vocn(:)),sum( vocn(:))
-    write(*,'(a11,3f25.8)') '    waterxU:',   minval( waterx(:)),   maxval( waterx(:)),sum( waterx(:))
-    write(*,'(a11,3f25.8)') '    wateryU:',   minval( watery(:)),   maxval( watery(:)),sum( watery(:))
-    write(*,'(a11,3f25.8)') '    forcexU:',   minval( forcex(:)),   maxval( forcex(:)),sum( forcex(:))
-    write(*,'(a11,3f25.8)') '    forceyU:',   minval( forcey(:)),   maxval( forcey(:)),sum( forcey(:))
+    write(*,'(a11,3f25.8)') '   waterxU:',   minval( waterx(:)),   maxval( waterx(:)),sum( waterx(:))
+    write(*,'(a11,3f25.8)') '   wateryU:',   minval( watery(:)),   maxval( watery(:)),sum( watery(:))
+    write(*,'(a11,3f25.8)') '   forcexU:',   minval( forcex(:)),   maxval( forcex(:)),sum( forcex(:))
+    write(*,'(a11,3f25.8)') '   forceyU:',   minval( forcey(:)),   maxval( forcey(:)),sum( forcey(:))
     write(*,'(a11,3f25.8)') '  umassdti:', minval( umassdti(:)),maxval( umassdti(:)),sum( umassdti(:))
-    write(*,'(a11,3f25.8)') '        fmU:',       minval( fm(:)),       maxval( fm(:)),sum( fm(:))
+    write(*,'(a11,3f25.8)') '       fmU:',       minval( fm(:)),       maxval( fm(:)),sum( fm(:))
     write(*,'(a11,3f25.8)') '    uarear:',   minval( uarear(:)),maxval( uarear(:)),sum( uarear(:))
   end subroutine stat_1d
   subroutine writeout_1d()
@@ -2135,14 +2135,20 @@ module vars
   end subroutine readin_1d_v2
   subroutine stat_1d()
     implicit none
+    real   (kind=dbl_kind) :: tmp
     write(*,'(a11,4I30)') 'Min/max ee', minval(ee(1:na)), maxval(ee(1:na)), sum(ee(1:na)), size(ee)
     write(*,'(a11,4I30)') 'Min/max ne', minval(ne(1:na)), maxval(ne(1:na)), sum(ne(1:na)), size(ne)
     write(*,'(a11,4I30)') 'Min/max se', minval(se(1:na)), maxval(se(1:na)), sum(se(1:na)), size(se)
     write(*,'(a11,4I30)') 'Min/max nw', minval(nw(1:na)), maxval(nw(1:na)), sum(nw(1:na)), size(nw)
     write(*,'(a11,4I30)') 'Min/max sw', minval(sw(1:na)), maxval(sw(1:na)), sum(sw(1:na)), size(sw)
     write(*,'(a11,4I30)') 'Min/max sse', minval(sse(1:na)), maxval(sse(1:na)), sum(sse(1:na)), size(sse)
-    write(*,'(a11,1I30)') 'count skipu ',  count(skipUcell1d(1:na))
-    write(*,'(a11,1I30)') 'count skipt ',  count(skipTcell1d(1:na))
+    write(*,'(a11,2I30)') 'count skipu ',  count(skipUcell1d(:)), size(skipUcell1d(:))
+    write(*,'(a11,2I30)') 'count skipt ',  count(skipTcell1d(:)), size(skipTcell1d(:))
+    tmp=count(skipUcell1d(:))/size(uvel)
+    write(*,'(a17,1f25.8)') ' Fraction skipu :', tmp
+    tmp=count(skipTcell1d(:))/size(uvel)
+    write(*,'(a17,1f25.8)') ' Fraction skipt :', tmp
+
     write (*,*) '-----------------------------------------------'
     write (*,*) 'Statistics for all relevant 1D variables'
     write (*,*) '-----------------------------------------------'

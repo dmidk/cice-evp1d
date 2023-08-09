@@ -10,13 +10,14 @@ program ciceevp
 #ifdef itt
   use ittnotify
 #endif
-  use ice_kinds_mod, only : int_kind
+  use ice_kinds_mod, only : int_kind, dbl_kind
 #ifdef _OPENMP_TARGET
-  use ice_constants, only : ndte, calc_const, arlx1i, denom1, capping,         &
+  use ice_dyn_shared, only : ndte, set_evp_parameters, arlx1i, denom1, capping,         &
                             deltaminEVP,e_factor,epp2i,brlx,c0
 #else
-  use ice_constants, only : ndte, calc_const, c0
+  use ice_dyn_shared, only : ndte, set_evp_parameters
 #endif
+  use ice_constants, only : c0
   use create_nml,    only : nx_block, ny_block, inpfname, read_nml,            &
                             testscale, na, navel, lindividual, binoutput
   use my_timer,      only : timer, timer_init, timer_print
@@ -36,7 +37,7 @@ program ciceevp
                             HTE1d,HTN1d, HTE1dm1,HTN1dm1
   implicit none
   integer (kind=int_kind) :: i, nthreads, myscale, scalefactor, iw
-
+  real    (kind=dbl_kind), parameter :: dt=300._dbl_kind
 #ifdef itt
   call itt_pause()
 #endif
@@ -47,7 +48,7 @@ program ciceevp
   call timer(1,'benchp')
   !--- allocate and fill content into arrays -----------------------------------
   call read_nml()
-  call calc_const()
+  call set_evp_parameters(dt)
   call alloc_1d_v2(scalefactor)
   ! NUMA initialization
 !$omp parallel do schedule(runtime) private(iw)
@@ -157,6 +158,7 @@ program ciceevp
   call itt_resume()
 #endif
   do i = 1, ndte
+
 #ifdef _OPENMP_TARGET
     !$omp target teams distribute parallel do
 #else

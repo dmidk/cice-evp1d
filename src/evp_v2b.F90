@@ -27,8 +27,8 @@ program ciceevp
 #ifdef sde
   use ssc_fortran,   only : fortran_sde_start, fortran_sde_stop
 #endif
-  use ice_kinds_mod, only : int_kind
-  use ice_constants, only : ndte, calc_const
+  use ice_kinds_mod, only : int_kind, dbl_kind
+  use ice_dyn_shared,only : ndte, set_evp_parameters
   use create_nml,    only : nx_block, ny_block, inpfname, read_nml,            &
                             testscale, na, navel, lindividual, binoutput
   use my_timer,      only : timer, timer_init, timer_print
@@ -49,7 +49,7 @@ program ciceevp
                             HTE1d,HTN1d, HTE1dm1,HTN1dm1
   implicit none
   integer (kind=int_kind) :: i, nthreads, myscale, scalefactor
-
+  real    (kind=dbl_kind), parameter :: dt=300._dbl_kind
 #ifdef itt
   call itt_pause()
 #endif
@@ -60,7 +60,7 @@ program ciceevp
   call timer(1,'benchp')
   !--- allocate and fill content into arrays -----------------------------------
   call read_nml()
-  call calc_const()
+  call set_evp_parameters(dt)
   call alloc_1d_v2(scalefactor)
 !$OMP PARALLEL DEFAULT(shared)
   call numainit_all(1,na*scalefactor,navel*scalefactor) ! numainit_all is for default testscale=1
