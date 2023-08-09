@@ -21,7 +21,7 @@ The source files are split into three groups:
 Link the correct compiler options to compiler.mk
 Currently two sets are provided
 compiler_Freya.mk (hpc at DMI). Note that version 2e do not compile., Till Rasmussen, DMI.
-compiler_jwp.mk (original) provided by Jacob Poulsen, Intel
+compiler_oneapi.mk (original) provided by Intel
 make
 ls bin/${COMPILER}/v*/*/evp_v?? # will list all the binaries that have been generated.
 ```
