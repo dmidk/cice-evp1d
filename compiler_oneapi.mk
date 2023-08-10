@@ -23,4 +23,5 @@ FCg1:=-D_OPENMP_TARGET -fiopenmp -O2 -fopenmp-targets=spir64="-mllvm -vpo-paropt
 FCg1f2018:=-D_OPENMP_TARGET -fiopenmp -O2 -fopenmp-targets=spir64="-mllvm -vpo-paropt-enable-64bit-opencl-atomics=true" -fopenmp-target-do-concurrent
 
 # Common
+checkflags = f0 f1
 flags = ${checkflags} f2 # g1 g1f2018
