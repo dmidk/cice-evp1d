@@ -1,0 +1,4 @@
+Program for test of integration of benchmark test.
+Currently created for version 2b.
+Main focus is to test whether this can be integrated.
+File to integrate is ice_dyn_evp1d.F90. This includes init, run and finalization.

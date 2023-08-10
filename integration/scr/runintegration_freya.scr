@@ -1,0 +1,44 @@
+#!/bin/bash 
+
+# Script to run test
+# set compiler (for now ifort or ftn)
+# set Path is set to current path (shown)
+basicdir=$pwd
+basicdir=$(pwd)
+echo "$basicdir"
+for f in f0 f1 f2
+do
+#  for vv in 0 1 2a 2b 2c 2d #2e
+#  for vv in 1 2a
+#  do
+    expdir=$basicdir/run/${f}/
+    bindir=$basicdir/bin/${f}/
+    mkdir -p ${expdir}/
+    cp scr/evp1d_debug.nml ${expdir}/
+
+cat << EOF > ${expdir}/integration.job
+#!/bin/tcsh -f
+#PBS -N integrate_evp1d
+#PBS -j oe
+#PBS -o integrate_evp1d.pbs
+#PBS -l select=1:ncpus=1:mpiprocs=1:ompthreads=36
+#PBS -l walltime=01:00:00
+
+cd \$PBS_O_WORKDIR
+
+# The default unexpected MPI message buffer size of 60Mb
+aprun -n 1 $bindir/standalone >&! ${expdir}/integration_evp1d.log
+EOF
+     cd $expdir
+     qsub $expdir/integration.job
+     cd $basicdir
+#  done
+#  md5sum output_stress_v*1d.bin
+#  md5sum output_stepu_v*1d.bin
+done
+#md5sum output_stress_v*1d.bin
+#md5sum output_stepu_v*1d.bin
+
+#    thread=$(grep "Running " v${vv}_${f}.log)
+#    echo "Testing results for flag $f for v${vv} : ${thread}"
+#    mkdir -p $basicdir/bin/${COMPILER}/v${vv}/${f}
