@@ -8,11 +8,10 @@ COMPILER='ftn'
 basicdir=$(pwd)
 echo "$basicdir"
 echo $COMPILER
-inputdir="/lustre/research/tar/test_evp/test_cice6_4/NAAg/run/2020030100/intel_normal/"
-for f in f0 # f1 f2
+inputdir="/lustre/research/tar/test_evp/test_cice6_4/NAAg/run/2020030100/intel_debug/"
+for f in f0 f1 f2
 do
-#  for vv in 0 1 2a 2b 2c 2d #2e
-  for vv in 1 2a
+  for vv in 0 1 2a 2b 2c 2d #2e
   do
     expdir=$basicdir/run/${COMPILER}/v${vv}/${f}/
     bindir=$basicdir/bin/${COMPILER}/v${vv}/${f}/
