@@ -1,0 +1,60 @@
+#!/bin/bash 
+
+# Script to run test
+# set compiler (for now ifort or ftn)
+# set Path is set to current path (shown)
+basicdir=$pwd
+COMPILER='ftn'
+basicdir=$(pwd)
+echo "$basicdir"
+echo $COMPILER
+inputdir="/lustre/research/tar/test_evp/test_cice6_4/NAAg/run/2020030100/intel_debug/"
+for f in f0 f1 f2
+do
+  for vv in 0 1 2a 2b 2c 2d #2e
+  do
+    expdir=$basicdir/run/${COMPILER}/v${vv}/${f}/
+    bindir=$basicdir/bin/${COMPILER}/v${vv}/${f}/
+    mkdir -p ${expdir}/
+    cp scr/kernel.nml ${expdir}/
+     echo $vv
+     if [ "v$vv" = "v0" ]; then
+       echo 'v0'
+      ln -sf $inputdir/base_input_double_both_ref_v0_2d.bin $expdir/input_double_2d.bin
+      ln -sf $inputdir/base_input_integer_both_ref_v0_2d.bin $expdir/input_integer_2d.bin
+     elif [ "v$vv" = "v1" ]; then
+        ln -sf $inputdir/base_input_int2_both_ref_v1-v2_1d.bin $expdir/input_integer_1d.bin
+        ln -sf $inputdir/base_input_double_both_ref_v1_1d.bin $expdir/input_double_1d_v1.bin
+        ln -sf $inputdir/base_input_logical_both_ref_v1-v2_1d.bin $expdir/input_logical_1d.bin
+     else
+        ln -sf $inputdir/base_input_int2_both_ref_v1-v2_1d.bin $expdir/input_integer_1d.bin
+        ln -sf $inputdir/base_input_double_both_ref_v2_1d.bin $expdir/input_double_1d_v2.bin
+        ln -sf $inputdir/base_input_logical_both_ref_v1-v2_1d.bin $expdir/input_logical_1d.bin
+     fi
+
+cat << EOF > ${expdir}/run.job
+#!/bin/tcsh -f
+#PBS -N kernel_evp1d
+#PBS -j oe
+#PBS -o kernel_evp1d.pbs
+#PBS -l select=1:ncpus=1:mpiprocs=1:ompthreads=36
+#PBS -l walltime=01:00:00
+
+cd \$PBS_O_WORKDIR
+
+# The default unexpected MPI message buffer size of 60Mb
+aprun -n 1 $bindir/evp_v${vv} >&! ${expdir}/kernel_evp1d.log
+EOF
+     cd $expdir
+     qsub $expdir/run.job
+     cd $basicdir
+  done
+#  md5sum output_stress_v*1d.bin
+#  md5sum output_stepu_v*1d.bin
+done
+#md5sum output_stress_v*1d.bin
+#md5sum output_stepu_v*1d.bin
+
+#    thread=$(grep "Running " v${vv}_${f}.log)
+#    echo "Testing results for flag $f for v${vv} : ${thread}"
+#    mkdir -p $basicdir/bin/${COMPILER}/v${vv}/${f}

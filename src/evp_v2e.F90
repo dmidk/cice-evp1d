@@ -10,12 +10,13 @@ program ciceevp
 #ifdef itt
   use ittnotify
 #endif
-  use ice_kinds_mod, only : int_kind
+  use ice_kinds_mod, only : int_kind, dbl_kind
+  use ice_dyn_shared,only : ndte, set_evp_parameters
 #ifdef _OPENMP_TARGET
-  use ice_constants, only : ndte, calc_const, arlx1i, denom1, capping,         &
-                            deltaminEVP,e_factor,epp2i,brlx,c0
+  use ice_constants, only : arlx1i, denom1, capping, deltaminEVP,e_factor,     &
+                            epp2i, brlx, c0
 #else
-  use ice_constants, only : ndte, calc_const, c0
+  use ice_constants, only : c0
 #endif
   use create_nml,    only : nx_block, ny_block, inpfname, read_nml,            &
                             testscale, na, navel, lindividual, binoutput
@@ -36,6 +37,7 @@ program ciceevp
                             HTE1d,HTN1d, HTE1dm1,HTN1dm1
   implicit none
   integer (kind=int_kind) :: i, nthreads, myscale, scalefactor, iw
+  real    (kind=dbl_kind), parameter :: dt=300._dbl_kind
 
 #ifdef itt
   call itt_pause()
@@ -47,7 +49,7 @@ program ciceevp
   call timer(1,'benchp')
   !--- allocate and fill content into arrays -----------------------------------
   call read_nml()
-  call calc_const()
+  call set_evp_parameters(dt)
   call alloc_1d_v2(scalefactor)
   do iw = 1,na*scalefactor
     skipTcell1d(iw)=.false.

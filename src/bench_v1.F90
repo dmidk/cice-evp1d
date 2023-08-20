@@ -58,8 +58,8 @@ subroutine stress (ee, ne, se, lb, ub,                                         &
   use ice_kinds_mod
   use myomp, only : domp_get_domain
   use ice_constants, only: c1, p027, p055, p111, p166,                         &
-                           p2, p222, p25, p333, p5, puny, ecci, arlx1i,        &
-                           denom1, Ktens, revp, capping
+                           p2, p222, p25, p333, p5
+  use ice_dyn_shared, only: arlx1i, denom1, Ktens, revp, capping
   implicit none
   ! arguments ------------------------------------------------------------------
   integer (kind=int_kind), intent(in) :: lb, ub
@@ -316,7 +316,7 @@ subroutine strain_rates (tmp_uvel_cc, tmp_vvel_cc,                             &
                                Deltane,    Deltanw,                            &
                                Deltase,    Deltasw     )
   use ice_kinds_mod
-  use ice_constants, only: e_factor
+  use ice_dyn_shared, only: e_factor
 
   real (kind=dbl_kind), intent(in) ::                                          &
          tmp_uvel_ee, tmp_vvel_ee,                                             &
@@ -398,9 +398,9 @@ end subroutine strain_rates
 !DIR$ ATTRIBUTES FORCEINLINE :: visc_replpress
 subroutine visc_replpress(strength, DminArea, Delta, zetax2, etax2,            &
                           rep_prs, capping)
-  use ice_constants, only: epp2i
+  use ice_dyn_shared, only: epp2i, Ktens
   use ice_kinds_mod
-  use ice_constants, only: c1, Ktens
+  use ice_constants, only: c1
 
   real (kind=dbl_kind), intent(in):: strength, DminArea
 
@@ -446,7 +446,8 @@ subroutine stepu (lb, ub,                                                      &
                         Tbu)
   use ice_kinds_mod
   use myomp, only : domp_get_domain
-  use ice_constants, only: c0, c1, rhow, brlx, revp
+  use ice_constants, only: c0, c1
+  use ice_dyn_shared, only: rhow, brlx, revp
   implicit none
   ! arguments ------------------------------------------------------------------
   integer(kind=int_kind), intent(in)                           :: lb,ub

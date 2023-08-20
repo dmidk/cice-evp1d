@@ -46,7 +46,17 @@
 !       Refactored to support explicit inlining
 !       Refactored to allow private subroutines in stress to become pure
 !===============================================================================
+!===============================================================================
+! 2023: DMI
+!       Updated to match requirements from CICE
+!===============================================================================
+
 module bench
+
+    use ice_dyn_shared, only: Ktens, epp2i,capping, e_factor
+
+  use ice_constants, only: c0, c1
+
 contains
 !DIR$ ATTRIBUTES FORCEINLINE :: stress
 subroutine stress (ee, ne, se, lb, ub,                                         &
@@ -58,9 +68,11 @@ subroutine stress (ee, ne, se, lb, ub,                                         &
                    str1, str2, str3, str4, str5, str6, str7, str8)
   use ice_kinds_mod
   use myomp, only : domp_get_domain
-  use ice_constants, only: c1, p027, p055, p111, p166, c1p5, e_factor,         &
-                           p2, p222, p25, p333, p5, puny, ecci, arlx1i,        &
-                           denom1, Ktens, revp, capping, deltaminEVP, epp2i
+  use ice_constants, only: p027, p055, p111, p166, c1p5,        &
+                           p222, p25, p333, p5
+  use ice_dyn_shared, only: arlx1i, denom1, revp,     &
+                           deltaminEVP
+! 
   implicit none
   ! arguments ------------------------------------------------------------------
   integer (kind=int_kind), intent(in)                           :: lb,ub
@@ -151,22 +163,21 @@ subroutine stress (ee, ne, se, lb, ub,                                         &
                             shearne,    shearnw,      &
                             shearse,    shearsw,      &
                             Deltane,    Deltanw,      &
-                            Deltase,    Deltasw, e_factor )
-
+                            Deltase,    Deltasw )
     !--------------------------------------------------------------------------
     ! viscosities and replacement pressure
     !--------------------------------------------------------------------------
     call visc_replpress (tmp_strength, tmp_DminTarea, Deltane, &
-                              zetax2ne, etax2ne, rep_prsne, capping, epp2i)
+                              zetax2ne, etax2ne, rep_prsne)
 
     call visc_replpress (tmp_strength, tmp_DminTarea, Deltanw, &
-                              zetax2nw, etax2nw, rep_prsnw, capping, epp2i)
+                              zetax2nw, etax2nw, rep_prsnw)
 
     call visc_replpress (tmp_strength, tmp_DminTarea, Deltasw, &
-                              zetax2sw, etax2sw, rep_prssw, capping, epp2i)
+                              zetax2sw, etax2sw, rep_prssw)
 
     call visc_replpress (tmp_strength, tmp_DminTarea, Deltase, &
-                              zetax2se, etax2se, rep_prsse, capping, epp2i)
+                              zetax2se, etax2se, rep_prsse)
 
     !--------------------------------------------------------------------------
     ! the stresses                            ! kg/s^2
@@ -321,13 +332,13 @@ pure subroutine strain_rates (tmp_uvel_cc, tmp_vvel_cc,                        &
                          shearne,    shearnw,                                  &
                          shearse,    shearsw,                                  &
                          Deltane,    Deltanw,                                  &
-                         Deltase,    Deltasw, e_factor )
+                         Deltase,    Deltasw )
 
   use ice_kinds_mod
 
   real (kind=dbl_kind), intent(in) ::                                          &
          tmp_uvel_ee, tmp_vvel_ee, tmp_uvel_se, tmp_vvel_se,                   &
-         tmp_uvel_cc, tmp_vvel_cc, tmp_uvel_ne, tmp_vvel_ne, e_factor
+         tmp_uvel_cc, tmp_vvel_cc, tmp_uvel_ne, tmp_vvel_ne
 
   real (kind=dbl_kind), intent(in) ::                                          &
          dxT      , & ! width of T-cell through the middle (m)
@@ -401,12 +412,11 @@ end subroutine strain_rates
 
 !DIR$ ATTRIBUTES FORCEINLINE :: visc_replpress
 pure subroutine visc_replpress(strength, DminArea, Delta,                      &
-                          zetax2, etax2, rep_prs, capping, epp2i)
+                          zetax2, etax2, rep_prs)
   use ice_kinds_mod
-  use ice_constants, only: c1, Ktens
 
   real (kind=dbl_kind), intent(in)::  strength, DminArea
-  real (kind=dbl_kind), intent(in)::  Delta, capping, epp2i
+  real (kind=dbl_kind), intent(in)::  Delta
   real (kind=dbl_kind), intent(out)::                                          &
          zetax2  , & ! bulk viscosity
          etax2   , & ! shear viscosity
@@ -447,7 +457,7 @@ subroutine stepu (lb, ub,                                                      &
                         Tbu, Cb)
   use ice_kinds_mod
   use myomp, only : domp_get_domain
-  use ice_constants, only: c0, c1, rhow, brlx, revp
+  use ice_dyn_shared, only: brlx, revp, u0, cosw, sinw
   implicit none
   ! arguments ------------------------------------------------------------------
   integer(kind=int_kind), intent(in)                           :: lb,ub
@@ -476,8 +486,7 @@ subroutine stepu (lb, ub,                                                      &
   ! basal stress coefficient
   real (kind=dbl_kind),dimension(:), intent(out), contiguous :: Cb
   real (kind=dbl_kind), parameter ::                                           &
-         cosw = c1   , & ! cos(ocean turning angle)  ! turning angle = 0
-         sinw = c0
+         rhow =  1026._dbl_kind               
   ! local variables
   integer (kind=int_kind) :: iw,il,iu
   real (kind=dbl_kind) ::                                                      &
@@ -489,8 +498,6 @@ subroutine stepu (lb, ub,                                                      &
   real (kind=dbl_kind) :: tmp_str2_nw,tmp_str3_sse,tmp_str4_sw,                &
                           tmp_str6_sse,tmp_str7_nw,tmp_str8_sw
 
-  ! residual velocity for basal stress (m/s)
-  real (kind=dbl_kind) :: u0 = 5e-5_dbl_kind
   !-----------------------------------------------------------------------------
   ! integrate the momentum equation
   !-----------------------------------------------------------------------------

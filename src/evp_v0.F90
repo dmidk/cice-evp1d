@@ -28,9 +28,9 @@ program cice_evp_kernel
 #ifdef sde
   use ssc_fortran,   only : fortran_sde_start, fortran_sde_stop
 #endif
-  use ice_kinds_mod, only : int_kind
-  use ice_dyn_shared, only : readin_halo, ice_haloUpdate
-  use ice_constants, only : ndte, calc_const
+  use ice_kinds_mod, only : int_kind, dbl_kind
+  use ice_boundary,  only : readin_halo, ice_haloUpdate
+  use ice_dyn_shared,only : ndte, set_evp_parameters
   use create_nml,    only : nx_block, ny_block, inpfname, read_nml,            & 
                             max_blocks, testscale, lindividual, binoutput
   use my_timer,      only : timer, timer_init, timer_print
@@ -49,7 +49,7 @@ program cice_evp_kernel
                             strinty, taubx, tauby, uvel_init, vvel_init, Tbu
   implicit none
   integer (int_kind)     :: iblk, nblocks, ksub, myscale
-
+    real(kind=dbl_kind), parameter :: dt =300._dbl_kind !!!! ADDED TAR MAY NEED TO DO SOMETHING WITH IT!!!! 
 #ifdef itt
   call itt_pause()
 #endif
@@ -58,7 +58,7 @@ program cice_evp_kernel
   call timer(1,'benchp')
   !--- allocate and fill content into arrays -----------------------------------
   call read_nml()
-  call calc_const()
+  call set_evp_parameters(dt)
   nblocks=max_blocks
   call alloc_2d_v0()
   call readin_2d()

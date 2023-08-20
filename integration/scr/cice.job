@@ -1,0 +1,11 @@
+#!/bin/tcsh -f
+#PBS -N cice_standalone
+#PBS -j oe
+#PBS -o cice.pbs
+#PBS -l select=1:ncpus=1:mpiprocs=1:ompthreads=1
+#PBS -l walltime=01:00:00
+
+cd $PBS_O_WORKDIR
+
+# The default unexpected MPI message buffer size of 60Mb
+aprun -n 1 /lustre/research/tar/test_evp/test_implementation/cice-evp1d/integration/bin/ftn/f2/standalone >&! /lustre/research/tar/test_evp/test_implementation/cice-evp1d/integration/rundir/standalone.log

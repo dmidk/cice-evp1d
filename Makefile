@@ -33,7 +33,7 @@ objtimer     = $(foreach v, $(versions), $(foreach F, $(flags), $(BINDIR)/$(COMP
 objice       = $(foreach v, $(versions), $(foreach F, $(flags), $(BINDIR)/$(COMPILER)/$(v)/$(F)/ice.o))
 objvars      = $(foreach v, $(versions), $(foreach F, $(flags), $(BINDIR)/$(COMPILER)/$(v)/$(F)/vars.o))
 objsde       = $(foreach v, $(versions), $(foreach F, $(flags), $(BINDIR)/$(COMPILER)/$(v)/$(F)/api_fortran_sde.o))
-objdomp      = $(foreach v, $(ompver),   $(foreach F, $(flags), $(BINDIR)/$(COMPILER)/$(v)/$(F)/domp.o))
+objmyomp      = $(foreach v, $(ompver),   $(foreach F, $(flags), $(BINDIR)/$(COMPILER)/$(v)/$(F)/myomp.o))
 objnuma      = $(foreach v, $(ompver),   $(foreach F, $(flags), $(BINDIR)/$(COMPILER)/$(v)/$(F)/numa.o))
 objbench_v0  = $(foreach F, $(flags), $(BINDIR)/$(COMPILER)/v0/$(F)/bench_v0.o)
 objevp_v0    = $(foreach F, $(flags), $(BINDIR)/$(COMPILER)/v0/$(F)/evp_v0.o)
@@ -55,23 +55,23 @@ all: $(allbin)
 
 # dependencies
 $(objtimer)    : $(objice)
-$(objdomp)     : $(objice)
-$(objvars)     : $(objice) $(objdomp)
+$(objmyomp)     : $(objice)
+$(objvars)     : $(objice) $(objmyomp)
 $(objbench_v0) : $(objice) $(objvars)
-$(objnuma)     : $(objice) $(objdomp) $(objvars)
+$(objnuma)     : $(objice) $(objmyomp) $(objvars)
 $(objevp_v0)   : $(objice) $(objtimer) $(objvars) $(objbench_v0) $(objsde)
-$(objbench_v1) : $(objice) $(objvars) $(objdomp)
-$(objevp_v1)   : $(objice) $(objtimer) $(objvars) $(objdomp) $(objbench_v1) $(objnuma)
-$(objbench_v2a) : $(objice) $(objvars) $(objdomp)
-$(objevp_v2a)   : $(objice) $(objtimer) $(objvars) $(objdomp) $(objbench_v2a) $(objnuma)
-$(objbench_v2b) : $(objice) $(objvars) $(objdomp)
-$(objevp_v2b)   : $(objice) $(objtimer) $(objvars) $(objdomp) $(objbench_v2b) $(objnuma) $(objsde)
-$(objbench_v2c) : $(objice) $(objvars) $(objdomp)
-$(objevp_v2c)   : $(objice) $(objtimer) $(objvars) $(objdomp) $(objbench_v2c) $(objnuma)
-$(objbench_v2d) : $(objice) $(objvars) $(objdomp)
-$(objevp_v2d)   : $(objice) $(objtimer) $(objvars) $(objdomp) $(objbench_v2d) $(objnuma)
-$(objbench_v2e) : $(objice) $(objvars) $(objdomp)
-$(objevp_v2e)   : $(objice) $(objtimer) $(objvars) $(objdomp) $(objbench_v2e) $(objnuma)
+$(objbench_v1) : $(objice) $(objvars) $(objmyomp)
+$(objevp_v1)   : $(objice) $(objtimer) $(objvars) $(objmyomp) $(objbench_v1) $(objnuma)
+$(objbench_v2a) : $(objice) $(objvars) $(objmyomp)
+$(objevp_v2a)   : $(objice) $(objtimer) $(objvars) $(objmyomp) $(objbench_v2a) $(objnuma)
+$(objbench_v2b) : $(objice) $(objmyomp)
+$(objevp_v2b)   : $(objice) $(objtimer) $(objvars) $(objmyomp) $(objbench_v2b) $(objnuma) $(objsde)
+$(objbench_v2c) : $(objice) $(objvars) $(objmyomp)
+$(objevp_v2c)   : $(objice) $(objtimer) $(objvars) $(objmyomp) $(objbench_v2c) $(objnuma)
+$(objbench_v2d) : $(objice) $(objvars) $(objmyomp)
+$(objevp_v2d)   : $(objice) $(objtimer) $(objvars) $(objmyomp) $(objbench_v2d) $(objnuma)
+$(objbench_v2e) : $(objice) $(objvars) $(objmyomp)
+$(objevp_v2e)   : $(objice) $(objtimer) $(objvars) $(objmyomp) $(objbench_v2e) $(objnuma)
 
 clean:
 	@rm -fr $(BINDIR)/$(COMPILER)
@@ -96,7 +96,7 @@ $(objvars): src/vars.F90
 	test -d $(@D) || mkdir -p $(@D)
 	$(COMPILER) -D$(word 3, $(subst 2e,2,$(subst 2d,2,$(subst 2c,2,$(subst 2b,2,$(subst 2a,2,$(subst /, ,$(@D)))))))) $(FCFLAG) $(@D) $(FC$(notdir $(@D))) -c $< -o $@
 
-$(objdomp): src/domp.F90
+$(objmyomp): src/myomp.F90
 	test -d $(@D) || mkdir -p $(@D)
 	$(COMPILER) -D$(word 3, $(subst 2e,2,$(subst 2d,2,$(subst 2c,2,$(subst 2b,2,$(subst 2a,2,$(subst /, ,$(@D)))))))) $(FCFLAG) $(@D) $(FC$(notdir $(@D))) -c $< -o $@
 
@@ -164,26 +164,26 @@ $(bin_v0): $(objice) $(objtimer) $(objvars) $(objbench_v0) $(objevp_v0)
 	test -d $(@D) || mkdir -p $(@D)
 	$(COMPILER) $(FCFLAG) $(@D) $(FC$(notdir $(@D))) -o $@ $(@D)/*.o $(LDFLAGS)
 
-$(bin_v1): $(objice) $(objtimer) $(objvars) $(objdomp) $(objbench_v1) $(objevp_v1) $(objnuma)
+$(bin_v1): $(objice) $(objtimer) $(objvars) $(objmyomp) $(objbench_v1) $(objevp_v1) $(objnuma)
 	test -d $(@D) || mkdir -p $(@D)
 	$(COMPILER) $(FCFLAG) $(@D) $(FC$(notdir $(@D))) -o $@ $(@D)/*.o $(LDFLAGS)
 
-$(bin_v2a): $(objice) $(objtimer) $(objvars) $(objdomp) $(objbench_v2a) $(objevp_v2a) $(objnuma)
+$(bin_v2a): $(objice) $(objtimer) $(objvars) $(objmyomp) $(objbench_v2a) $(objevp_v2a) $(objnuma)
 	test -d $(@D) || mkdir -p $(@D)
 	$(COMPILER) $(FCFLAG) $(@D) $(FC$(notdir $(@D))) -o $@ $(@D)/*.o $(LDFLAGS)
 
-$(bin_v2b): $(objice) $(objtimer) $(objvars) $(objdomp) $(objbench_v2b) $(objevp_v2b) $(objnuma)
+$(bin_v2b): $(objice) $(objtimer) $(objvars) $(objmyomp) $(objbench_v2b) $(objevp_v2b) $(objnuma)
 	test -d $(@D) || mkdir -p $(@D)
 	$(COMPILER) $(FCFLAG) $(@D) $(FC$(notdir $(@D))) -o $@ $(@D)/*.o $(LDFLAGS)
 
-$(bin_v2c): $(objice) $(objtimer) $(objvars) $(objdomp) $(objbench_v2c) $(objevp_v2c) $(objnuma)
+$(bin_v2c): $(objice) $(objtimer) $(objvars) $(objmyomp) $(objbench_v2c) $(objevp_v2c) $(objnuma)
 	test -d $(@D) || mkdir -p $(@D)
 	$(COMPILER) $(FCFLAG) $(@D) $(FC$(notdir $(@D))) -o $@ $(@D)/*.o $(LDFLAGS)
 
-$(bin_v2d): $(objice) $(objtimer) $(objvars) $(objdomp) $(objbench_v2d) $(objevp_v2d) $(objnuma)
+$(bin_v2d): $(objice) $(objtimer) $(objvars) $(objmyomp) $(objbench_v2d) $(objevp_v2d) $(objnuma)
 	test -d $(@D) || mkdir -p $(@D)
 	$(COMPILER) $(FCFLAG) $(@D) $(FC$(notdir $(@D))) -o $@ $(@D)/*.o $(LDFLAGS)
 
-$(bin_v2e): $(objice) $(objtimer) $(objvars) $(objdomp) $(objbench_v2e) $(objevp_v2e) $(objnuma)
+$(bin_v2e): $(objice) $(objtimer) $(objvars) $(objmyomp) $(objbench_v2e) $(objevp_v2e) $(objnuma)
 	test -d $(@D) || mkdir -p $(@D)
 	$(COMPILER) $(FCFLAG) $(@D) $(FC$(notdir $(@D))) -o $@ $(@D)/*.o $(LDFLAGS)
