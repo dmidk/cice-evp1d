@@ -124,7 +124,7 @@ module ice_dyn_evp1d
     use debug_evp1d, only : dumpall
     use ice_dyn_shared, only : ndte
 ! bench should be renamed to something better e.g evp1d_func
-  use bench_v2b, only : stress, stepu
+  use bench, only : stress, stepu
     implicit none
     real(kind=dbl_kind), dimension(:,:,:), intent(in) :: &
                            L_stressp_1 , L_stressp_2 , L_stressp_3, L_stressp_4,     &

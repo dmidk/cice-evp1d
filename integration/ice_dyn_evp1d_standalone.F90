@@ -10,7 +10,7 @@ module cicestuff
   real(kind=dbl_kind), parameter :: dt =300
   integer(kind=int_kind) :: nx_global,ny_global
   logical(kind=log_kind), allocatable, dimension(:,:,:) :: L_iceUmask, L_tmask
-  integer(kind=int_kind), allocatable, dimension(:,:,:) :: L_iceTmask
+  logical(kind=log_kind), allocatable, dimension(:,:,:) :: L_iceTmask
   real(kind=dbl_kind), allocatable, dimension(:,:,:) :: L_dyT, L_dxT, L_uarear
   real(kind=dbl_kind), allocatable, dimension(:,:) :: G_HTE, G_HTN
   real(kind=dbl_kind), allocatable, dimension(:,:,:) ::  &
@@ -20,6 +20,7 @@ module cicestuff
           L_stressm_3(:,:,:), L_stressm_4(:,:,:), &
          L_stress12_1(:,:,:),L_stress12_2(:,:,:), &
          L_stress12_3(:,:,:),L_stress12_4(:,:,:), &
+         L_strength(:,:,:), &
             L_cdn_ocn(:,:,:),       L_aiu(:,:,:), &
                L_uocn(:,:,:),      L_vocn(:,:,:), &
             L_waterxU(:,:,:),   L_wateryU(:,:,:), &
@@ -44,6 +45,7 @@ module cicestuff
           L_stressm_3(nx_block,ny_block,max_block), L_stressm_4(nx_block,ny_block,max_block), &
          L_stress12_1(nx_block,ny_block,max_block),L_stress12_2(nx_block,ny_block,max_block), &
          L_stress12_3(nx_block,ny_block,max_block),L_stress12_4(nx_block,ny_block,max_block), &
+         L_strength(nx_block,ny_block,max_block), &
             L_cdn_ocn(nx_block,ny_block,max_block),       L_aiu(nx_block,ny_block,max_block), &
                L_uocn(nx_block,ny_block,max_block),      L_vocn(nx_block,ny_block,max_block), &
             L_waterxU(nx_block,ny_block,max_block),   L_wateryU(nx_block,ny_block,max_block), &
@@ -55,15 +57,15 @@ module cicestuff
            stat=ierr )
             if (ierr/=0) stop 'Error allocating dynamic'
 
-!  iceTmask=.false.
-  L_iceTmask=0
+  L_iceTmask=.false.
+!  L_iceTmask=0
   nx_global=nx_block-2*nghost
   ny_global=ny_block-2*nghost
   L_iceUmask=.false.
   L_tmask=.false.
   L_tmask(20:40,20:40,1)=.true.
   L_iceUmask(20:40,20:40,1)=.true.
-  L_icetmask(20:40,20:40,1)=1
+  L_icetmask(20:40,20:40,1)=.true.
   L_umassdti=1.
   L_aiu=0.9 
   L_dxT=1.
@@ -85,6 +87,7 @@ program cice_evp1dstandalone
                         L_stressp_1 , L_stressp_2 , L_stressp_3, L_stressp_4,     &
                         L_stressm_1 , L_stressm_2 , L_stressm_3, L_stressm_4,     &
                         L_stress12_1, L_stress12_2, L_stress12_3,L_stress12_4,    &
+                        L_strength,                                               &
                         L_cdn_ocn   , L_aiu       , L_uocn     , L_vocn     ,     &
                         L_waterxU   , L_wateryU   , L_forcexU  , L_forceyU  ,     &
                         L_umassdti  , L_fmU       , L_strintxU , L_strintyU ,     &
@@ -92,6 +95,7 @@ program cice_evp1dstandalone
                         L_icetmask , L_iceUmask
 
   use ice_dyn_evp1d
+  character(10),parameter :: debugf='after1d'
 
   call ciceinit
 
@@ -112,29 +116,32 @@ program cice_evp1dstandalone
   call dyn_evp1d_run(L_stressp_1 , L_stressp_2 , L_stressp_3, L_stressp_4,     &
                      L_stressm_1 , L_stressm_2 , L_stressm_3, L_stressm_4,     &
                      L_stress12_1, L_stress12_2, L_stress12_3,L_stress12_4,    &
+                     L_strength,                                               &
                      L_cdn_ocn   , L_aiu       , L_uocn     , L_vocn     ,     &
                      L_waterxU   , L_wateryU   , L_forcexU  , L_forceyU  ,     &
                      L_umassdti  , L_fmU       , L_strintxU , L_strintyU ,     &
                      L_Tbu       , L_Cb        , L_uvel     , L_vvel     ,     &
                      L_icetmask , L_iceUmask)
-   write(*,*) 'a'
+  write(*,*) 'a'
   call dyn_evp1d_run(L_stressp_1 , L_stressp_2 , L_stressp_3, L_stressp_4,     &
                      L_stressm_1 , L_stressm_2 , L_stressm_3, L_stressm_4,     &
                      L_stress12_1, L_stress12_2, L_stress12_3,L_stress12_4,    &
+                     L_strength,                                               &
                      L_cdn_ocn   , L_aiu       , L_uocn     , L_vocn     ,     &
                      L_waterxU   , L_wateryU   , L_forcexU  , L_forceyU  ,     &
                      L_umassdti  , L_fmU       , L_strintxU , L_strintyU ,     &
                      L_Tbu       , L_Cb        , L_uvel     , L_vvel     ,     &
                      L_icetmask , L_iceUmask)
- write(*,*) 'b'
+  write(*,*) 'b'
   call dyn_evp2d_dump(L_stressp_1 , L_stressp_2 , L_stressp_3, L_stressp_4,     &
                       L_stressm_1 , L_stressm_2 , L_stressm_3, L_stressm_4,     &
                       L_stress12_1, L_stress12_2, L_stress12_3,L_stress12_4,    &
+                      L_strength,                                               &
                       L_cdn_ocn   , L_aiu       , L_uocn     , L_vocn     ,     &
                       L_waterxU   , L_wateryU   , L_forcexU  , L_forceyU  ,     &
                       L_umassdti  , L_fmU       , L_strintxU , L_strintyU ,     &
                       L_Tbu       , L_Cb        , L_uvel     , L_vvel     ,     &
-                      L_icetmask , L_iceUmask)
+                      L_icetmask , L_iceUmask, debugf)
   ! deallocate all 1D arrays, close files, say goodbye in the logfile.... Will be called after last timestep is completed
   write(*,*) 'c'
   call dyn_evp1d_finalize()

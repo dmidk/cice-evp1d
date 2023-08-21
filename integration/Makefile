@@ -35,8 +35,7 @@ ice_dyn_evp1d      = $(foreach F, $(flags), $(BINDIR)/$(F)/ice_dyn_evp1d.o)
 #Temporary debug 
 debug_evp1d        = $(foreach F, $(flags), $(BINDIR)/$(F)/debug_evp1d.o)
 #objsde       = $(foreach v, $(versions), $(foreach F, $(flags), $(BINDIR)/$(COMPILER)/$(v)/$(F)/api_fortran_sde.o))
-# JWP's Implementation
-objdomp            = $(foreach F, $(flags), $(BINDIR)/$(F)/domp.o)
+objmyomp           = $(foreach F, $(flags), $(BINDIR)/$(F)/myomp.o)
 objnuma            = $(foreach F, $(flags), $(BINDIR)/$(F)/numa.o)
 objbench_v2b       = $(foreach F, $(flags), $(BINDIR)/$(F)/bench_v2b.o)
 objevp1d_int_v2b   = $(foreach F, $(flags), $(BINDIR)/$(F)/evp1d.o)
@@ -53,8 +52,8 @@ $(ice_dyn_shared)     : $(ice_kinds_mod) $(ice_constants)
 $(ice_gather_scatter) : $(ice_kinds_mod)
 $(ice_dyn_evp1d)      : $(ice_kinds_mod) $(ice_constants) $(debug_evp1d) $(objbench_v2b) $(ice_communicate) $(ice_gather_scatter) $(ice_domain) $(ice_dyn_shared)
 $(debug_evp1d)        : $(ice_kinds_mod)
-$(objdomp)            : $(ice_kinds_mod) $(ice_constants)
-$(objbench_v2b)       : $(ice_kinds_mod)  $(ice_dyn_shared) $(ice_constant) $(objdomp)
+$(objmyomp)           : $(ice_kinds_mod) $(ice_constants)
+$(objbench_v2b)       : $(ice_kinds_mod) $(ice_dyn_shared) $(ice_constant) $(objmyomp)
 $(objstandalone)      : $(ice_kinds_mod) $(ice_dyn_evp1d) $(ice_dyn_shared)
 clean:
 	@rm -fr $(BINDIR)
@@ -95,7 +94,7 @@ $(debug_evp1d): debug_evp1d.F90
 	test -d $(@D) || mkdir -p $(@D)
 	$(COMPILER) -D$(word 3, $(subst 2e,2,$(subst 2d,2,$(subst 2c,2,$(subst 2b,2,$(subst 2a,2,$(subst /, ,$(@D)))))))) $(FCFLAG) $(@D) $(FC$(notdir $(@D))) -c $< -o $@
 
-$(objdomp): ../src/domp.F90
+$(objmyomp): ../src/myomp.F90
 	test -d $(@D) || mkdir -p $(@D)
 	$(COMPILER) -D$(word 3, $(subst 2e,2,$(subst 2d,2,$(subst 2c,2,$(subst 2b,2,$(subst 2a,2,$(subst /, ,$(@D)))))))) $(FCFLAG) $(@D) $(FC$(notdir $(@D))) -c $< -o $@
 
@@ -119,6 +118,6 @@ $(objstandalone): ice_dyn_evp1d_standalone.F90
 	test -d $(@D) || mkdir -p $(@D)
 	$(COMPILER) -D$(word 3, $(subst 2e,2,$(subst 2d,2,$(subst 2c,2,$(subst 2b,2,$(subst 2a,2,$(subst /, ,$(@D)))))))) $(FCFLAG) $(@D) $(FC$(notdir $(@D))) -c $< -o $@
 
-$(cice_evp1d_standalone): $(ice_kinds_mod) $(ice_constants) $(objdomp) $(ice_gather_scatter) $(ice_communicate) $(ice_dyn_shared) $(ice_dyn_evp) $(debug_evp1d) $(objstandalone)
+$(cice_evp1d_standalone): $(ice_kinds_mod) $(ice_constants) $(objmyomp) $(ice_gather_scatter) $(ice_communicate) $(ice_dyn_shared) $(ice_dyn_evp) $(debug_evp1d) $(objstandalone)
 	test -d $(@D) || mkdir -p $(@D)
 	$(COMPILER) $(FCFLAG) $(@D) $(FC$(notdir $(@D))) -o $@ $(@D)/*.o $(LDFLAGS)
