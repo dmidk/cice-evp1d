@@ -34,6 +34,11 @@
 !       Converted to free source form (F90)
 !=======================================================================
 module bench
+
+   use ice_dyn_shared, only: Ktens, epp2i,capping, e_factor
+
+   use ice_constants, only: c0, c1
+
 contains
 
 !=======================================================================
@@ -61,10 +66,10 @@ subroutine stress (nx_block,   ny_block,   &
                    str )
 
   use ice_kinds_mod
-  use ice_constants, only: c0, c1, p027, p055, p111, p166, & 
+  use ice_constants, only: p027, p055, p111, p166, & 
       p2, p222, p25, p333, p5 
 !puny is not used unless eliminate underflow is used (search Elimiate underflow in this function)
-  use ice_dyn_shared, only: arlx1i, denom1, Ktens, revp, capping
+  use ice_dyn_shared, only: arlx1i, denom1, revp
   implicit none
   integer (kind=int_kind), intent(in) :: & 
      nx_block, ny_block, & ! block dimensions
@@ -155,16 +160,16 @@ subroutine stress (nx_block,   ny_block,   &
          !-----------------------------------------------------------------
 
          call visc_replpress (strength(i,j), DminTarea(i,j), Deltane, &
-                              zetax2ne, etax2ne, rep_prsne, capping)
+                              zetax2ne, etax2ne, rep_prsne)
 
          call visc_replpress (strength(i,j), DminTarea(i,j), Deltanw, &
-                              zetax2nw, etax2nw, rep_prsnw, capping)
+                              zetax2nw, etax2nw, rep_prsnw)
 
          call visc_replpress (strength(i,j), DminTarea(i,j), Deltasw, &
-                              zetax2sw, etax2sw, rep_prssw, capping)
+                              zetax2sw, etax2sw, rep_prssw)
 
          call visc_replpress (strength(i,j), DminTarea(i,j), Deltase, &
-                              zetax2se, etax2se, rep_prsse, capping)
+                              zetax2se, etax2se, rep_prsse)
 
   !-----------------------------------------------------------------
   ! the stresses                            ! kg/s^2
@@ -350,7 +355,6 @@ subroutine strain_rates (      nx_block,   ny_block,   &
                                Deltase,    Deltasw     )
 
   use ice_kinds_mod
-  use ice_dyn_shared, only: e_factor
 
       integer (kind=int_kind), intent(in) :: &
          nx_block, ny_block    ! block dimensions
@@ -418,7 +422,7 @@ subroutine strain_rates (      nx_block,   ny_block,   &
 
       end subroutine strain_rates
 
-!=======================================================================
+!===============================================================================
 ! Computes viscosities and replacement pressure for stress
 ! calculations. Note that tensile strength is included here.
 !
@@ -431,20 +435,18 @@ subroutine strain_rates (      nx_block,   ny_block,   &
 ! Lemieux, J. F. et al. (2016). Improving the simulation of landfast ice
 ! by combining tensile strength and a parameterization for grounded ridges.
 ! J. Geophys. Res. Oceans, 121, 7354-7368.
+!===============================================================================
 
       subroutine visc_replpress(strength, DminArea, Delta, &
-                                zetax2, etax2, rep_prs, capping)
+                                zetax2, etax2, rep_prs)
       use ice_kinds_mod
-      use ice_constants, only: c1
-      use ice_dyn_shared, only: epp2i, Ktens
 
       real (kind=dbl_kind), intent(in)::  &
          strength, & !
          DminArea    !
 
       real (kind=dbl_kind), intent(in)::  &
-         Delta   , & !
-         capping     !
+         Delta 
 
       real (kind=dbl_kind), intent(out):: &
          zetax2  , & ! bulk viscosity
@@ -489,8 +491,7 @@ subroutine strain_rates (      nx_block,   ny_block,   &
                         Tbu)
   use ice_kinds_mod
 
-  use ice_constants, only: c0, c1
-  use ice_dyn_shared, only:  rhow, brlx, revp
+  use ice_dyn_shared, only: brlx, revp, u0, cosw, sinw
 
   implicit none
      integer (kind=int_kind), intent(in) :: &
@@ -537,9 +538,8 @@ subroutine strain_rates (      nx_block,   ny_block,   &
      intent(inout) :: &
      Cw                   ! ocean-ice neutral drag coefficient
 
-  real (kind=dbl_kind), parameter :: &
-         cosw = c1   , & ! cos(ocean turning angle)  ! turning angle = 0
-         sinw = c0  
+  real (kind=dbl_kind), parameter ::                                           &
+         rhow =  1026._dbl_kind  ! This originally originates from icepack
 
       ! local variables
 
@@ -552,8 +552,6 @@ subroutine strain_rates (      nx_block,   ny_block,   &
          taux, tauy,         & ! part of ocean stress term          
          Cb                    ! complete basal stress coeff
 
-      real (kind=dbl_kind) :: &
-         u0 = 5e-5_dbl_kind    ! residual velocity for basal stress (m/s)
 
       !-----------------------------------------------------------------
       ! integrate the momentum equation
