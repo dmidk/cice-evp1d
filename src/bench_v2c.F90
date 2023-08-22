@@ -84,7 +84,7 @@ subroutine stress (ee, ne, se, lb, ub,                                         &
            stressp_1, stressp_2, stressp_3, stressp_4 , & ! sigma11+sigma22
            stressm_1, stressm_2, stressm_3, stressm_4 , & ! sigma11-sigma22
            stress12_1,stress12_2,stress12_3,stress12_4    ! sigma12
-  real    (kind=dbl_kind), dimension(:), intent(out), contiguous ::            &
+  real    (kind=dbl_kind), dimension(:), intent(inout), contiguous ::            &
            str1,str2,str3,str4,str5,str6,str7,str8
   ! local variables
   integer (kind=int_kind) :: iw
@@ -113,6 +113,7 @@ subroutine stress (ee, ne, se, lb, ub,                                         &
     tmp_cxp, tmp_cyp, tmp_cxm, tmp_cym,                                        &
     tmp_strength, tmp_DminTarea, tmparea,                                      &
     tmp_dxhy, tmp_dyhx
+
 
 #ifdef _OPENMP_TARGET
   !$omp target teams distribute parallel do

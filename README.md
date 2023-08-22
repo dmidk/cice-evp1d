@@ -124,4 +124,7 @@ ff333fe6c22cf4a0d0124c3cd494280f  output_stress_v2d_1d.bin
 e795c11d6841e41cb888ad9f5784efcf  output_stepu_v2d_1d.bin
 323ae6467f6665f5ba8af944e5781ffd  output_stepu_v2e_1d.bin
 ```
+# Integration
 
+A seperate folder has been created for integration. This contains debugging and a driver (ice_dyn_evp1d.F90). It is used for simple checks (compile and run).
+In order to check the fulle integration 
